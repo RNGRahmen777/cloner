@@ -1,0 +1,1816 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Discord Server Cloner</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════════════
+   VARIABLES & RESET
+══════════════════════════════════════════════ */
+:root {
+  --bg:        #0D161F;
+  --s1:        #111E2A;
+  --s2:        #162535;
+  --s3:        #1C3245;
+  --bd:        rgba(107,122,153,0.14);
+  --bd-md:     rgba(107,122,153,0.26);
+  --bd-hi:     rgba(107,122,153,0.44);
+  --text:      #F0F3F8;
+  --text-2:    #B8C4D8;
+  --text-3:    #6B7A99;
+  --blue:      #4A8DB5;
+  --blue-g:    rgba(74,141,181,0.22);
+  --blue-d:    rgba(74,141,181,0.09);
+  --green:     #42A882;
+  --green-d:   rgba(66,168,130,0.1);
+  --red:       #B85555;
+  --red-d:     rgba(184,85,85,0.1);
+  --amber:     #B89042;
+  --amber-d:   rgba(184,144,66,0.1);
+  --purple:    #9B72CF;
+  --r:         14px;
+  --r-sm:      9px;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{font-size:14px;scroll-behavior:smooth}
+body{
+  font-family:'Syne',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -5%,rgba(74,141,181,0.08) 0%,transparent 70%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.022'/%3E%3C/svg%3E");
+}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--s3);border-radius:4px}
+
+/* ══════════════════════════════════════════════
+   HEADER
+══════════════════════════════════════════════ */
+header{
+  width:100%;background:rgba(13,22,31,0.88);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--bd);
+  padding:0 28px;height:60px;
+  display:flex;align-items:center;gap:12px;
+  position:sticky;top:0;z-index:200;
+}
+.logo{
+  width:34px;height:34px;
+  background:linear-gradient(145deg,var(--blue),#2A6A95);
+  border-radius:10px;display:grid;place-items:center;
+  box-shadow:0 2px 14px var(--blue-g),inset 0 1px 0 rgba(255,255,255,0.1);
+  flex-shrink:0;
+}
+.hd-title{font-size:14px;font-weight:700;letter-spacing:-0.2px}
+.hd-sub{font-size:11px;color:var(--text-3);margin-top:1px}
+.hd-div{width:1px;height:24px;background:var(--bd-md);margin:0 4px}
+.ver{background:var(--s3);border:1px solid var(--bd-md);border-radius:5px;padding:2px 7px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-3)}
+
+/* Rate limit pill */
+.rl-pill{
+  display:flex;align-items:center;gap:6px;
+  padding:4px 10px;border-radius:20px;
+  font-size:11px;font-weight:600;font-family:'JetBrains Mono',monospace;
+  border:1px solid var(--bd-md);background:var(--s2);color:var(--text-3);
+  transition:all 0.3s;
+}
+.rl-pill.ok  {border-color:rgba(66,168,130,0.3);color:var(--green);background:var(--green-d)}
+.rl-pill.warn{border-color:rgba(184,144,66,0.3);color:var(--amber);background:var(--amber-d)}
+.rl-pill.low {border-color:rgba(184,85,85,0.3); color:var(--red);  background:var(--red-d)}
+.rl-bar{
+  width:38px;height:5px;border-radius:3px;
+  background:var(--s3);overflow:hidden;
+}
+.rl-fill{height:100%;border-radius:3px;transition:width 0.6s ease,background 0.4s}
+
+/* Status chip */
+.status-chip{
+  margin-left:auto;display:flex;align-items:center;gap:6px;
+  padding:4px 11px 4px 9px;border-radius:20px;
+  font-size:11.5px;font-weight:600;border:1px solid;
+  transition:all 0.3s;letter-spacing:0.1px;
+}
+.status-chip.idle{background:rgba(66,168,130,0.08);border-color:rgba(66,168,130,0.25);color:var(--green)}
+.status-chip.run {background:rgba(74,141,181,0.08);border-color:rgba(74,141,181,0.25);color:var(--blue)}
+.status-chip.done{background:rgba(66,168,130,0.08);border-color:rgba(66,168,130,0.25);color:var(--green)}
+.status-chip.stop{background:var(--amber-d);border-color:rgba(184,144,66,0.25);color:var(--amber)}
+.status-chip.err {background:var(--red-d);border-color:rgba(184,85,85,0.25);color:var(--red)}
+.pulse{width:7px;height:7px;border-radius:50%;position:relative;flex-shrink:0}
+.pulse::before{content:'';position:absolute;inset:0;border-radius:50%;background:currentColor;animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(0.6);opacity:0.4}}
+
+/* ══════════════════════════════════════════════
+   MAIN LAYOUT
+══════════════════════════════════════════════ */
+main{
+  width:100%;max-width:780px;
+  padding:24px 16px 52px;
+  display:flex;flex-direction:column;gap:14px;
+}
+
+/* ══════════════════════════════════════════════
+   CARDS
+══════════════════════════════════════════════ */
+.card{
+  background:var(--s1);border:1px solid var(--bd);
+  border-radius:var(--r);overflow:hidden;
+  transition:border-color 0.2s,box-shadow 0.2s;
+  animation:cardIn 0.35s ease both;
+}
+.card:nth-child(1){animation-delay:0.04s}
+.card:nth-child(2){animation-delay:0.08s}
+.card:nth-child(3){animation-delay:0.12s}
+.card:nth-child(4){animation-delay:0.16s}
+.card:nth-child(5){animation-delay:0.20s}
+.card:nth-child(6){animation-delay:0.24s}
+.card:nth-child(7){animation-delay:0.28s}
+.card:nth-child(8){animation-delay:0.32s}
+@keyframes cardIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.card:focus-within{border-color:var(--bd-hi);box-shadow:0 0 0 3px var(--blue-d)}
+
+.card-head{
+  padding:12px 16px;border-bottom:1px solid var(--bd);
+  display:flex;align-items:center;gap:9px;
+  background:rgba(0,0,0,0.1);
+}
+.icon-wrap{
+  width:28px;height:28px;background:var(--s2);
+  border:1px solid var(--bd-md);border-radius:7px;
+  display:grid;place-items:center;flex-shrink:0;color:var(--text-3);
+}
+.card-label{
+  font-size:10.5px;font-weight:700;
+  text-transform:uppercase;letter-spacing:1px;color:var(--text-3);
+}
+.card-body{padding:16px}
+
+/* ══════════════════════════════════════════════
+   FIELDS & INPUTS
+══════════════════════════════════════════════ */
+.field{margin-bottom:13px}
+.field:last-child{margin-bottom:0}
+.field-label{
+  display:flex;align-items:center;gap:5px;
+  font-size:10.5px;font-weight:600;
+  text-transform:uppercase;letter-spacing:0.7px;
+  color:var(--text-3);margin-bottom:6px;
+}
+.input-wrap{position:relative}
+input[type=text],input[type=password],input[type=number]{
+  width:100%;background:var(--s2);
+  border:1px solid var(--bd-md);border-radius:var(--r-sm);
+  padding:9px 13px;font-family:'JetBrains Mono',monospace;
+  font-size:12px;color:var(--text);outline:none;
+  transition:border-color 0.18s,box-shadow 0.18s,background 0.18s;
+  -moz-appearance:textfield;
+}
+input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none}
+input::placeholder{color:var(--text-3);font-family:'Syne',sans-serif;font-size:12px;opacity:0.5}
+input:focus{border-color:var(--blue);background:var(--s3);box-shadow:0 0 0 3px var(--blue-d)}
+input.err-input{border-color:var(--red)!important;box-shadow:0 0 0 3px var(--red-d)!important}
+input.ok-input{border-color:var(--green)!important;box-shadow:0 0 0 3px var(--green-d)!important}
+
+.input-suffix{
+  position:absolute;right:8px;top:50%;
+  transform:translateY(-50%);
+  display:flex;align-items:center;gap:3px;
+}
+.icon-btn{
+  width:26px;height:26px;display:grid;place-items:center;
+  border-radius:6px;border:none;background:transparent;
+  color:var(--text-3);cursor:pointer;transition:all 0.15s;
+}
+.icon-btn:hover{background:var(--s3);color:var(--text)}
+
+/* Segmented control */
+.seg{
+  display:flex;background:var(--s2);
+  border:1px solid var(--bd-md);border-radius:var(--r-sm);
+  padding:3px;gap:3px;margin-top:9px;
+}
+.seg-btn{
+  flex:1;height:30px;border:none;border-radius:7px;
+  background:transparent;font-family:'Syne',sans-serif;
+  font-size:11.5px;font-weight:600;color:var(--text-3);
+  cursor:pointer;transition:all 0.18s;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.seg-btn.on{
+  background:var(--s3);color:var(--text);
+  box-shadow:0 1px 5px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.05);
+  border:1px solid var(--bd-md);
+}
+
+/* ══════════════════════════════════════════════
+   TOKEN TEST INDICATOR
+══════════════════════════════════════════════ */
+.token-status{
+  display:flex;align-items:center;gap:8px;
+  margin-top:10px;padding:9px 12px;
+  border-radius:var(--r-sm);border:1px solid var(--bd);
+  background:var(--s2);font-size:12px;color:var(--text-3);
+  transition:all 0.25s;
+}
+.token-status.idle{}
+.token-status.checking{border-color:rgba(74,141,181,0.3);color:var(--blue);background:var(--blue-d)}
+.token-status.valid  {border-color:rgba(66,168,130,0.35);color:var(--green);background:var(--green-d)}
+.token-status.invalid{border-color:rgba(184,85,85,0.35);color:var(--red);background:var(--red-d)}
+.ts-icon{flex-shrink:0}
+.ts-text{flex:1}
+.ts-user{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;opacity:0.8;margin-top:1px}
+
+/* ══════════════════════════════════════════════
+   SERVER ROW
+══════════════════════════════════════════════ */
+.server-row{
+  display:grid;
+  grid-template-columns:1fr 34px 1fr;
+  gap:10px;align-items:flex-end;
+}
+.arrow-node{
+  height:38px;display:grid;place-items:center;
+  background:var(--s2);border:1px solid var(--bd-md);
+  border-radius:8px;color:var(--blue);margin-bottom:1px;
+}
+@media(max-width:520px){
+  .server-row{grid-template-columns:1fr;gap:8px}
+  .arrow-node{display:none}
+}
+
+/* ══════════════════════════════════════════════
+   OPTIONS
+══════════════════════════════════════════════ */
+.opts-grid{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:8px;margin-bottom:13px;
+}
+@media(max-width:400px){.opts-grid{grid-template-columns:1fr}}
+.opt{
+  display:flex;align-items:center;gap:9px;
+  background:var(--s2);border:1px solid var(--bd);
+  border-radius:var(--r-sm);padding:10px 12px;
+  cursor:pointer;user-select:none;transition:all 0.18s;
+}
+.opt:hover{border-color:var(--bd-md);background:var(--s3)}
+.opt.on{border-color:rgba(74,141,181,0.4);background:var(--blue-d)}
+.chk{
+  width:17px;height:17px;border-radius:5px;
+  border:1.5px solid var(--bd-hi);background:var(--s1);
+  display:grid;place-items:center;flex-shrink:0;transition:all 0.15s;
+}
+.opt.on .chk{background:var(--blue);border-color:var(--blue);box-shadow:0 0 6px var(--blue-g)}
+.chk-tick{
+  stroke:white;fill:none;stroke-width:2.2;
+  stroke-linecap:round;stroke-linejoin:round;
+  opacity:0;transform:scale(0.4);
+  transition:all 0.15s cubic-bezier(.34,1.56,.64,1);
+}
+.opt.on .chk-tick{opacity:1;transform:scale(1)}
+.opt-ico{
+  width:22px;height:22px;background:var(--s3);border-radius:6px;
+  display:grid;place-items:center;flex-shrink:0;color:var(--text-3);transition:color 0.18s;
+}
+.opt.on .opt-ico{color:var(--blue)}
+.opt-lbl{font-size:12.5px;font-weight:600;color:var(--text-2);transition:color 0.18s}
+.opt.on .opt-lbl{color:var(--text)}
+
+.delay-row{
+  display:flex;align-items:center;gap:10px;
+  background:var(--s2);border:1px solid var(--bd);
+  border-radius:var(--r-sm);padding:10px 12px;
+}
+.delay-lbl{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;color:var(--text-2);flex:1}
+.delay-lbl svg{color:var(--text-3)}
+.delay-unit{font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--text-3)}
+#delayInput{width:60px;text-align:center}
+
+/* ══════════════════════════════════════════════
+   PREVIEW
+══════════════════════════════════════════════ */
+.prev-tabs{
+  display:flex;gap:3px;padding:3px;
+  background:var(--s2);border-radius:9px;
+  border:1px solid var(--bd-md);
+}
+.ptab{
+  flex:1;height:29px;border:none;border-radius:6px;
+  background:transparent;font-family:'Syne',sans-serif;
+  font-size:11px;font-weight:600;color:var(--text-3);
+  cursor:pointer;display:flex;align-items:center;
+  justify-content:center;gap:5px;transition:all 0.16s;
+}
+.ptab.on{
+  background:var(--s3);color:var(--text);
+  box-shadow:0 1px 4px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.05);
+  border:1px solid var(--bd-md);
+}
+.ptab-n{
+  background:var(--s3);border-radius:4px;
+  padding:1px 5px;font-size:10px;
+  font-family:'JetBrains Mono',monospace;
+  color:var(--text-3);transition:all 0.16s;
+}
+.ptab.on .ptab-n{background:var(--blue-d);color:var(--blue)}
+
+/* Two-column preview (source vs target) */
+.prev-cols{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:0;
+}
+.prev-col{border-right:1px solid var(--bd)}
+.prev-col:last-child{border-right:none}
+.prev-col-head{
+  display:flex;align-items:center;gap:6px;
+  padding:8px 14px;border-bottom:1px solid var(--bd);
+  background:rgba(0,0,0,0.1);
+}
+.prev-col-title{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-3)}
+.conflict-badge{
+  margin-left:auto;font-size:9.5px;font-family:'JetBrains Mono',monospace;
+  padding:1.5px 6px;border-radius:4px;
+  background:rgba(184,144,66,0.12);color:var(--amber);border:1px solid rgba(184,144,66,0.25);
+}
+
+@media(max-width:560px){.prev-cols{grid-template-columns:1fr}}
+
+.prev-body{max-height:240px;overflow-y:auto}
+.prev-empty{
+  display:flex;flex-direction:column;
+  align-items:center;gap:7px;
+  padding:28px 16px;color:var(--text-3);
+  font-size:12px;text-align:center;
+}
+.prev-empty svg{opacity:0.22}
+.scan-btn{
+  display:flex;align-items:center;gap:6px;
+  height:32px;padding:0 12px;
+  border-radius:7px;border:1px solid var(--bd-md);
+  background:var(--s2);color:var(--text-2);
+  font-family:'Syne',sans-serif;font-size:11px;font-weight:600;
+  cursor:pointer;transition:all 0.16s;white-space:nowrap;
+}
+.scan-btn:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-d)}
+.scan-btn:disabled{opacity:0.4;cursor:not-allowed}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Role items */
+.role-item{
+  display:flex;align-items:center;gap:9px;
+  padding:7px 14px;border-bottom:1px solid var(--bd);
+  transition:background 0.1s;cursor:pointer;
+}
+.role-item:last-child{border-bottom:none}
+.role-item:hover{background:rgba(255,255,255,0.02)}
+.role-item.deselected{opacity:0.35}
+.role-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;box-shadow:0 0 4px currentColor}
+.role-name{font-size:12px;font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.role-perms{display:flex;gap:3px;flex-wrap:wrap}
+.ptag{font-size:9px;padding:1.5px 5px;border-radius:3px;font-family:'JetBrains Mono',monospace}
+.ptag.admin{background:rgba(184,85,85,0.12);color:var(--red)}
+.ptag.mod  {background:var(--amber-d);color:var(--amber)}
+.ptag.norm {background:var(--s3);color:var(--text-3)}
+.role-sel{
+  width:15px;height:15px;border-radius:4px;
+  border:1.5px solid var(--bd-hi);background:var(--s2);
+  display:grid;place-items:center;flex-shrink:0;transition:all 0.15s;
+}
+.role-item:not(.deselected) .role-sel{background:var(--blue);border-color:var(--blue)}
+.conflict-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--amber);flex-shrink:0;
+  box-shadow:0 0 4px var(--amber);
+}
+
+/* Channel tree */
+.ch-cat{padding:7px 14px 0}
+.ch-cat-hd{
+  display:flex;align-items:center;gap:6px;
+  padding:4px 0 3px;cursor:pointer;user-select:none;
+}
+.ch-arr{color:var(--text-3);transition:transform 0.16s;flex-shrink:0}
+.ch-arr.open{transform:rotate(90deg)}
+.ch-cat-name{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-3);flex:1}
+.ch-cat-n{
+  font-family:'JetBrains Mono',monospace;font-size:9.5px;
+  color:var(--text-3);background:var(--s2);
+  border:1px solid var(--bd);border-radius:4px;padding:1px 5px;
+}
+.ch-list{
+  padding-left:9px;border-left:1px solid var(--bd-md);
+  margin:3px 0 7px 8px;overflow:hidden;
+  transition:max-height 0.22s ease,opacity 0.18s;max-height:600px;opacity:1;
+}
+.ch-list.closed{max-height:0;opacity:0}
+.ch-item{
+  display:flex;align-items:center;gap:7px;
+  padding:4px 7px;border-radius:6px;
+  transition:background 0.1s;cursor:pointer;
+}
+.ch-item:hover{background:rgba(255,255,255,0.025)}
+.ch-item.deselected{opacity:0.3}
+.ch-ico{color:var(--text-3);flex-shrink:0}
+.ch-name{font-size:12px;font-weight:500;color:var(--text-2);flex:1}
+.ch-tbadge{
+  font-size:9px;font-family:'JetBrains Mono',monospace;
+  padding:1.5px 5px;border-radius:3px;background:var(--s3);color:var(--text-3);
+}
+.ch-tbadge.voice  {background:rgba(66,168,130,0.1);color:var(--green)}
+.ch-tbadge.forum  {background:var(--blue-d);color:var(--blue)}
+.ch-tbadge.stage  {background:var(--amber-d);color:var(--amber)}
+.ch-tbadge.announce{background:rgba(155,114,207,0.1);color:var(--purple)}
+.ch-sel{
+  width:14px;height:14px;border-radius:3px;
+  border:1.5px solid var(--bd-hi);background:var(--s2);
+  display:grid;place-items:center;flex-shrink:0;transition:all 0.15s;
+}
+.ch-item:not(.deselected) .ch-sel{background:var(--blue);border-color:var(--blue)}
+
+.prev-sum{
+  display:flex;gap:8px;flex-wrap:wrap;
+  padding:8px 14px;border-top:1px solid var(--bd);
+  background:rgba(0,0,0,0.07);
+}
+.sum-i{display:flex;align-items:center;gap:4px;font-size:10.5px;font-family:'JetBrains Mono',monospace;color:var(--text-3)}
+.sum-n{font-weight:600;color:var(--text-2)}
+.sum-sep{width:1px;height:13px;background:var(--bd-md)}
+
+/* ══════════════════════════════════════════════
+   BUTTONS
+══════════════════════════════════════════════ */
+.btn-row{display:grid;grid-template-columns:1fr 1fr 44px;gap:8px}
+@media(max-width:400px){.btn-row{grid-template-columns:1fr 1fr;gap:7px}.btn-row .btn-ghost{display:none}}
+.btn{
+  height:42px;border-radius:var(--r-sm);
+  border:1px solid transparent;font-family:'Syne',sans-serif;
+  font-size:12.5px;font-weight:700;letter-spacing:0.2px;
+  cursor:pointer;display:flex;align-items:center;
+  justify-content:center;gap:7px;transition:all 0.16s;
+}
+.btn-primary{
+  background:var(--blue);color:#fff;
+  box-shadow:0 2px 12px var(--blue-g),inset 0 1px 0 rgba(255,255,255,0.12);
+}
+.btn-primary:hover:not(:disabled){background:#5A9EC5;transform:translateY(-1px);box-shadow:0 4px 18px var(--blue-g)}
+.btn-primary:active:not(:disabled){transform:translateY(0)}
+.btn-primary:disabled{opacity:0.35;cursor:not-allowed}
+.btn-danger{background:transparent;border-color:rgba(184,85,85,0.28);color:var(--red)}
+.btn-danger:hover:not(:disabled){background:var(--red-d);border-color:rgba(184,85,85,0.5)}
+.btn-danger:disabled{opacity:0.28;cursor:not-allowed}
+.btn-ghost{background:var(--s2);border-color:var(--bd-md);color:var(--text-3)}
+.btn-ghost:hover{color:var(--text);border-color:var(--bd-hi)}
+.btn-sec{
+  height:38px;padding:0 14px;border-radius:8px;
+  border:1px solid var(--bd-md);background:var(--s2);
+  font-family:'Syne',sans-serif;font-size:11.5px;font-weight:600;
+  color:var(--text-2);cursor:pointer;
+  display:flex;align-items:center;gap:6px;
+  transition:all 0.15s;white-space:nowrap;
+}
+.btn-sec:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-d)}
+
+/* ══════════════════════════════════════════════
+   PROGRESS (per-item)
+══════════════════════════════════════════════ */
+.prog-track{height:2px;background:var(--bd);overflow:hidden}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--blue),#7ABBD9);width:0%;transition:width 0.35s ease;box-shadow:0 0 6px var(--blue-g)}
+.prog-fill.anim{width:42%;animation:sweep 1.35s ease-in-out infinite}
+@keyframes sweep{0%{transform:translateX(-120%)}100%{transform:translateX(360%)}}
+
+.clone-prog{padding:14px 16px}
+.cp-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:10px;
+}
+.cp-title{font-size:12px;font-weight:600;color:var(--text-2)}
+.cp-pct{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--blue);font-weight:500}
+.cp-bar{height:6px;background:var(--s3);border-radius:3px;overflow:hidden;margin-bottom:10px}
+.cp-bar-fill{height:100%;background:linear-gradient(90deg,var(--blue),#6BB8D8);border-radius:3px;transition:width 0.4s ease;width:0%}
+
+.cp-steps{display:flex;flex-direction:column;gap:5px}
+.cp-step{
+  display:flex;align-items:center;gap:9px;
+  padding:7px 10px;border-radius:7px;
+  background:var(--s2);border:1px solid var(--bd);
+  font-size:11.5px;transition:all 0.2s;
+}
+.cp-step.active{border-color:rgba(74,141,181,0.35);background:var(--blue-d)}
+.cp-step.done  {border-color:rgba(66,168,130,0.25);background:var(--green-d)}
+.cp-step.failed{border-color:rgba(184,85,85,0.25);background:var(--red-d)}
+.cp-step-ico{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;flex-shrink:0;font-size:11px}
+.cp-step.pending .cp-step-ico{background:var(--s3);color:var(--text-3)}
+.cp-step.active  .cp-step-ico{background:var(--blue-d);color:var(--blue)}
+.cp-step.done    .cp-step-ico{background:var(--green-d);color:var(--green)}
+.cp-step.failed  .cp-step-ico{background:var(--red-d);color:var(--red)}
+.cp-step-lbl{flex:1;color:var(--text-2);font-weight:500}
+.cp-step.active .cp-step-lbl{color:var(--text)}
+.cp-step.done   .cp-step-lbl{color:var(--green)}
+.cp-step-sub{font-size:10.5px;color:var(--text-3);font-family:'JetBrains Mono',monospace}
+.cp-step.active .cp-step-sub{color:var(--blue)}
+@keyframes spin-step{to{transform:rotate(360deg)}}
+
+/* ══════════════════════════════════════════════
+   LOG
+══════════════════════════════════════════════ */
+.log-body{min-height:50px;max-height:260px;overflow-y:auto}
+.log-empty{display:flex;flex-direction:column;align-items:center;gap:7px;padding:28px 16px;color:var(--text-3);font-size:12.5px}
+.log-empty svg{opacity:0.22}
+.log-row{
+  display:grid;grid-template-columns:52px 38px 1fr;
+  gap:9px;align-items:baseline;
+  padding:7px 16px;border-bottom:1px solid var(--bd);
+  animation:rowIn 0.16s ease;font-family:'JetBrains Mono',monospace;font-size:11px;
+}
+.log-row:last-child{border-bottom:none}
+@keyframes rowIn{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:translateY(0)}}
+.log-time{color:var(--text-3);opacity:0.5}
+.log-tag{font-size:9px;font-weight:700;letter-spacing:0.4px;padding:1.5px 0;text-align:center;border-radius:3px}
+.tag-INFO {color:var(--blue);background:var(--blue-d)}
+.tag-OK   {color:var(--green);background:var(--green-d)}
+.tag-WARN {color:var(--amber);background:var(--amber-d)}
+.tag-ERR  {color:var(--red);background:var(--red-d)}
+.tag-STEP {color:var(--text-2);background:rgba(107,122,153,0.14)}
+.log-msg{color:var(--text-2);line-height:1.5}
+.log-msg.OK  {color:#5ABFA0}
+.log-msg.ERR {color:#C07070}
+.log-msg.WARN{color:#C9A85A}
+.log-cnt{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-3);background:var(--s2);border:1px solid var(--bd-md);border-radius:4px;padding:2px 6px}
+
+/* ══════════════════════════════════════════════
+   HISTORY
+══════════════════════════════════════════════ */
+.hist-item{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 14px;border-bottom:1px solid var(--bd);
+  transition:background 0.1s;
+}
+.hist-item:last-child{border-bottom:none}
+.hist-item:hover{background:rgba(255,255,255,0.015)}
+.hist-dot{
+  width:8px;height:8px;border-radius:50%;flex-shrink:0;
+}
+.hist-dot.success{background:var(--green);box-shadow:0 0 5px var(--green)}
+.hist-dot.partial{background:var(--amber);box-shadow:0 0 5px var(--amber)}
+.hist-dot.failed {background:var(--red);box-shadow:0 0 5px var(--red)}
+.hist-info{flex:1;min-width:0}
+.hist-name{font-size:12.5px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hist-meta{display:flex;gap:7px;margin-top:2px;flex-wrap:wrap}
+.hist-tag{
+  font-size:9.5px;font-family:'JetBrains Mono',monospace;
+  padding:1.5px 6px;border-radius:3px;background:var(--s3);color:var(--text-3);
+}
+.hist-tag.ok{background:var(--green-d);color:var(--green)}
+.hist-tag.warn{background:var(--amber-d);color:var(--amber)}
+.hist-tag.fail{background:var(--red-d);color:var(--red)}
+.hist-time{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text-3);flex-shrink:0}
+.hist-empty{display:flex;flex-direction:column;align-items:center;gap:7px;padding:28px 16px;color:var(--text-3);font-size:12px;text-align:center}
+.hist-empty svg{opacity:0.2}
+
+/* ══════════════════════════════════════════════
+   SAVED SERVERS
+══════════════════════════════════════════════ */
+.saved-item{
+  display:flex;align-items:center;gap:11px;
+  background:var(--s2);border:1px solid var(--bd);
+  border-radius:var(--r-sm);padding:10px 13px;
+  transition:border-color 0.18s;
+  animation:rowIn 0.18s ease both;
+}
+.saved-item:hover{border-color:var(--bd-md)}
+.saved-av{
+  width:34px;height:34px;border-radius:9px;
+  display:grid;place-items:center;font-size:13px;font-weight:700;
+  flex-shrink:0;border:1px solid var(--bd-md);
+  font-family:'Syne',sans-serif;letter-spacing:-0.5px;
+}
+.saved-name{font-size:12.5px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.saved-meta{display:flex;align-items:center;gap:6px;margin-top:3px;flex-wrap:wrap}
+.saved-id{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-3)}
+.sv-tag{font-size:9.5px;font-family:'JetBrains Mono',monospace;padding:1.5px 5px;border-radius:3px;background:var(--s3);color:var(--text-3);border:1px solid var(--bd)}
+.sv-tag.roles   {color:var(--purple);background:rgba(155,114,207,0.09);border-color:rgba(155,114,207,0.2)}
+.sv-tag.channels{color:var(--blue);background:var(--blue-d);border-color:rgba(74,141,181,0.2)}
+.saved-date{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text-3);opacity:0.6;white-space:nowrap;flex-shrink:0}
+.saved-actions{display:flex;gap:5px;flex-shrink:0}
+.sav-btn{
+  height:28px;padding:0 10px;border-radius:6px;
+  border:1px solid var(--bd-md);background:var(--s3);
+  font-family:'Syne',sans-serif;font-size:11px;font-weight:600;
+  color:var(--text-2);cursor:pointer;
+  display:flex;align-items:center;gap:5px;transition:all 0.14s;
+}
+.sav-btn:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-d)}
+.sav-btn.del{border-color:transparent;background:transparent;color:var(--text-3);padding:0 7px}
+.sav-btn.del:hover{border-color:rgba(184,85,85,0.3);color:var(--red);background:var(--red-d)}
+.saved-empty{display:flex;flex-direction:column;align-items:center;gap:7px;padding:28px 16px;color:var(--text-3);font-size:12px;text-align:center}
+.saved-empty svg{opacity:0.2}
+.saved-grid{display:flex;flex-direction:column;gap:7px}
+
+/* ══════════════════════════════════════════════
+   MODALS
+══════════════════════════════════════════════ */
+.overlay{
+  position:fixed;inset:0;
+  background:rgba(9,16,23,0.82);
+  backdrop-filter:blur(8px);z-index:300;
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity 0.2s;
+  padding:16px;
+}
+.overlay.open{opacity:1;pointer-events:all}
+.modal{
+  background:var(--s1);border:1px solid var(--bd-hi);
+  border-radius:18px;width:420px;max-width:100%;
+  box-shadow:0 24px 60px rgba(0,0,0,0.55);
+  transform:translateY(14px) scale(0.96);
+  transition:transform 0.22s cubic-bezier(.34,1.4,.64,1);
+  max-height:90vh;overflow-y:auto;
+}
+.overlay.open .modal{transform:translateY(0) scale(1)}
+.modal-hd{
+  padding:16px 18px 13px;border-bottom:1px solid var(--bd);
+  display:flex;align-items:center;gap:9px;
+}
+.modal-title{font-size:13.5px;font-weight:700;color:var(--text);flex:1}
+.modal-x{
+  width:26px;height:26px;border-radius:6px;border:none;
+  background:var(--s2);color:var(--text-3);cursor:pointer;
+  display:grid;place-items:center;transition:all 0.14s;
+}
+.modal-x:hover{background:var(--s3);color:var(--text)}
+.modal-body{padding:16px 18px}
+.modal-ft{padding:13px 18px;border-top:1px solid var(--bd);display:flex;gap:7px;justify-content:flex-end}
+
+/* Confirm modal specifics */
+.confirm-info{
+  background:var(--s2);border:1px solid var(--bd-md);
+  border-radius:var(--r-sm);padding:12px 14px;margin-bottom:14px;
+}
+.confirm-row{display:flex;align-items:center;justify-content:space-between;padding:3px 0;font-size:12px}
+.confirm-key{color:var(--text-3);font-weight:500}
+.confirm-val{color:var(--text);font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500}
+.confirm-warn{
+  display:flex;align-items:flex-start;gap:8px;
+  background:var(--amber-d);border:1px solid rgba(184,144,66,0.3);
+  border-radius:var(--r-sm);padding:10px 12px;font-size:12px;color:var(--amber);
+}
+
+/* ══════════════════════════════════════════════
+   ERROR CARD
+══════════════════════════════════════════════ */
+.error-card{
+  display:flex;flex-direction:column;align-items:center;gap:10px;
+  padding:28px 20px;text-align:center;
+}
+.error-icon{
+  width:48px;height:48px;border-radius:50%;
+  background:var(--red-d);border:1px solid rgba(184,85,85,0.3);
+  display:grid;place-items:center;color:var(--red);
+}
+.error-title{font-size:14px;font-weight:700;color:var(--text)}
+.error-msg{font-size:12px;color:var(--text-3);max-width:300px;line-height:1.6}
+.error-actions{display:flex;gap:8px}
+
+/* ══════════════════════════════════════════════
+   TOAST
+══════════════════════════════════════════════ */
+.toast{
+  position:fixed;bottom:22px;left:50%;
+  transform:translateX(-50%) translateY(8px);
+  background:var(--s3);border:1px solid var(--bd-hi);
+  border-radius:10px;padding:9px 16px;
+  font-size:12.5px;font-weight:600;color:var(--text);
+  display:flex;align-items:center;gap:7px;
+  z-index:400;opacity:0;pointer-events:none;
+  transition:all 0.24s cubic-bezier(.34,1.4,.64,1);
+  white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,0.4);
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.ok  {border-color:rgba(66,168,130,0.45)}
+.toast.warn{border-color:rgba(184,144,66,0.45)}
+.toast.err {border-color:rgba(184,85,85,0.45)}
+
+svg{display:block}
+</style>
+</head>
+<body>
+
+<!-- ══════ HEADER ══════ -->
+<header>
+  <div class="logo">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/>
+    </svg>
+  </div>
+  <div>
+    <div class="hd-title">Server Cloner</div>
+    <div class="hd-sub">Discord Automation Tool</div>
+  </div>
+  <div class="hd-div"></div>
+  <span class="ver">v3.0</span>
+
+  <!-- Rate Limit -->
+  <div class="rl-pill ok" id="rlPill">
+    <div class="rl-bar">
+      <div class="rl-fill" id="rlFill" style="width:90%;background:var(--green)"></div>
+    </div>
+    <span id="rlTxt">90 / 100</span>
+  </div>
+
+  <div class="status-chip idle" id="statusChip">
+    <span class="pulse"></span>
+    <span id="statusTxt">Bereit</span>
+  </div>
+</header>
+
+<main>
+
+<!-- ══════ 1. TOKEN ══════ -->
+<div class="card">
+  <div class="card-head">
+    <div class="icon-wrap">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+    </div>
+    <span class="card-label">Authentifizierung</span>
+  </div>
+  <div class="card-body">
+    <div class="field">
+      <div class="field-label">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Bot Token
+      </div>
+      <div class="input-wrap">
+        <input type="password" id="tokenInput" placeholder="Token hier einfügen …" style="padding-right:88px" oninput="onTokenChange()">
+        <div class="input-suffix">
+          <button class="icon-btn" id="revealBtn" onclick="toggleToken()" title="Anzeigen">
+            <svg id="eyeIco" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+          <button class="btn-sec" style="height:26px;padding:0 9px;font-size:10.5px;border-radius:5px" onclick="testToken()" id="testBtn">
+            Testen
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- Token status -->
+    <div class="token-status" id="tokenStatus">
+      <span class="ts-icon">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      </span>
+      <div>
+        <div class="ts-text" id="tsText">Token eingeben und auf „Testen" klicken</div>
+        <div class="ts-user" id="tsUser" style="display:none"></div>
+      </div>
+    </div>
+    <div class="seg">
+      <button class="seg-btn on" id="btnBot" onclick="setMode('bot')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M12 2v4M8 2v2M16 2v2"/><circle cx="9" cy="16" r="1" fill="currentColor"/><circle cx="15" cy="16" r="1" fill="currentColor"/></svg>
+        Bot Token
+      </button>
+      <button class="seg-btn" id="btnUser" onclick="setMode('user')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        User Token
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ 2. SERVER AUSWAHL ══════ -->
+<div class="card">
+  <div class="card-head">
+    <div class="icon-wrap">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+    </div>
+    <span class="card-label">Server Auswahl</span>
+  </div>
+  <div class="card-body">
+    <div class="server-row">
+      <div class="field" style="margin:0">
+        <div class="field-label">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+          Quell-Server
+        </div>
+        <input type="text" id="sourceInput" placeholder="Server-ID oder Invite …">
+      </div>
+      <div class="arrow-node">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </div>
+      <div class="field" style="margin:0">
+        <div class="field-label">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 8.12 19.79 19.79 0 0 1 1.61 4a2 2 0 0 1 1.68-2.25h3a2 2 0 0 1 2 1.72"/></svg>
+          Ziel-Server
+        </div>
+        <input type="text" id="targetInput" placeholder="Server-ID oder Invite …">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ 3. OPTIONEN ══════ -->
+<div class="card">
+  <div class="card-head">
+    <div class="icon-wrap">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M19.07 19.07l-1.41-1.41M4.93 19.07l1.41 1.41M22 12h-2M4 12H2M12 22v-2M12 4V2"/></svg>
+    </div>
+    <span class="card-label">Klon-Optionen</span>
+  </div>
+  <div class="card-body">
+    <div class="opts-grid">
+      <div class="opt on" id="optRoles" onclick="toggleOpt(this)">
+        <div class="chk"><svg class="chk-tick" width="9" height="9" viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2.5"/></svg></div>
+        <div class="opt-ico"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+        <span class="opt-lbl">Rollen</span>
+      </div>
+      <div class="opt on" id="optChannels" onclick="toggleOpt(this)">
+        <div class="chk"><svg class="chk-tick" width="9" height="9" viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2.5"/></svg></div>
+        <div class="opt-ico"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+        <span class="opt-lbl">Kanäle</span>
+      </div>
+      <div class="opt" id="optEmojis" onclick="toggleOpt(this)">
+        <div class="chk"><svg class="chk-tick" width="9" height="9" viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2.5"/></svg></div>
+        <div class="opt-ico"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></div>
+        <span class="opt-lbl">Emojis</span>
+      </div>
+      <div class="opt" id="optSettings" onclick="toggleOpt(this)">
+        <div class="chk"><svg class="chk-tick" width="9" height="9" viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2.5"/></svg></div>
+        <div class="opt-ico"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M19.07 19.07l-1.41-1.41M4.93 19.07l1.41 1.41M22 12h-2M4 12H2M12 22v-2M12 4V2"/></svg></div>
+        <span class="opt-lbl">Einstellungen</span>
+      </div>
+    </div>
+    <div class="delay-row">
+      <span class="delay-lbl">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Verzögerung
+      </span>
+      <input type="number" id="delayInput" value="0.5" min="0" max="10" step="0.1">
+      <span class="delay-unit">sek</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ 4. VORANSICHT ══════ -->
+<div class="card">
+  <div class="card-head">
+    <div class="icon-wrap">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+    </div>
+    <span class="card-label">Voransicht</span>
+    <div style="margin-left:auto;display:flex;gap:6px">
+      <button class="scan-btn" id="scanBtn" onclick="doScan()">
+        <svg id="scanIco" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+        Scannen
+      </button>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div style="padding:11px 16px 0;border-bottom:1px solid var(--bd)">
+    <div class="prev-tabs">
+      <button class="ptab on" id="ptRoles" onclick="switchPTab('roles')">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Rollen <span class="ptab-n" id="ptRoleN">0</span>
+      </button>
+      <button class="ptab" id="ptCh" onclick="switchPTab('ch')">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Kanäle <span class="ptab-n" id="ptChN">0</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Pane: Roles -->
+  <div id="ppRoles">
+    <div class="prev-cols">
+      <!-- Source -->
+      <div class="prev-col">
+        <div class="prev-col-head">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+          <span class="prev-col-title">Quelle</span>
+          <span id="srcRoleConflict" class="conflict-badge" style="display:none"></span>
+        </div>
+        <div class="prev-body" id="srcRolesBody">
+          <div class="prev-empty"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Scannen um Rollen zu sehen</div>
+        </div>
+      </div>
+      <!-- Target -->
+      <div class="prev-col">
+        <div class="prev-col-head">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07"/></svg>
+          <span class="prev-col-title">Ziel (vorhanden)</span>
+        </div>
+        <div class="prev-body" id="tgtRolesBody">
+          <div class="prev-empty"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Noch kein Ziel-Scan</div>
+        </div>
+      </div>
+    </div>
+    <div class="prev-sum" id="roleSumBar" style="display:none">
+      <span class="sum-i"><span class="sum-n" id="sumTotalRoles">0</span>&nbsp;gesamt</span>
+      <div class="sum-sep"></div>
+      <span class="sum-i"><span class="sum-n" id="sumSelRoles">0</span>&nbsp;ausgewählt</span>
+      <div class="sum-sep"></div>
+      <span class="sum-i"><span class="sum-n" id="sumAdminRoles">0</span>&nbsp;Admin</span>
+      <div class="sum-sep"></div>
+      <span class="sum-i" style="color:var(--amber)"><span class="sum-n" id="sumConflict">0</span>&nbsp;Konflikte</span>
+    </div>
+  </div>
+
+  <!-- Pane: Channels -->
+  <div id="ppCh" style="display:none">
+    <div class="prev-cols">
+      <div class="prev-col">
+        <div class="prev-col-head">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+          <span class="prev-col-title">Quelle</span>
+        </div>
+        <div class="prev-body" id="srcChBody">
+          <div class="prev-empty"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Scannen um Kanäle zu sehen</div>
+        </div>
+      </div>
+      <div class="prev-col">
+        <div class="prev-col-head">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07"/></svg>
+          <span class="prev-col-title">Ziel (vorhanden)</span>
+        </div>
+        <div class="prev-body" id="tgtChBody">
+          <div class="prev-empty"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Noch kein Ziel-Scan</div>
+        </div>
+      </div>
+    </div>
+    <div class="prev-sum" id="chSumBar" style="display:none">
+      <span class="sum-i"><span class="sum-n" id="sumTotalCh">0</span>&nbsp;gesamt</span>
+      <div class="sum-sep"></div>
+      <span class="sum-i"><span class="sum-n" id="sumSelCh">0</span>&nbsp;ausgewählt</span>
+      <div class="sum-sep"></div>
+      <span class="sum-i"><span class="sum-n" id="sumVoice">0</span>&nbsp;Voice</span>
+      <div class="sum-sep"></div>
+      <span class="sum-i"><span class="sum-n" id="sumCats">0</span>&nbsp;Kategorien</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ 5. AUSFÜHRUNG ══════ -->
+<div class="card">
+  <div class="card-head">
+    <div class="icon-wrap">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+    </div>
+    <span class="card-label">Ausführung</span>
+  </div>
+  <div class="card-body">
+    <div class="btn-row">
+      <button class="btn btn-primary" id="startBtn" onclick="handleStart()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Klonen starten
+      </button>
+      <button class="btn btn-danger" id="stopBtn" onclick="stopClone()" disabled>
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+        Stoppen
+      </button>
+      <button class="btn btn-ghost" onclick="clearLog()" title="Log leeren">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ 6. KLON-FORTSCHRITT ══════ -->
+<div class="card" id="cloneProgCard" style="display:none">
+  <div class="card-head">
+    <div class="icon-wrap">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    </div>
+    <span class="card-label">Fortschritt</span>
+    <span id="progPct" style="margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--blue);font-weight:600">0%</span>
+  </div>
+  <div class="prog-track"><div class="prog-fill" id="progFill"></div></div>
+  <div class="clone-prog">
+    <div class="cp-steps" id="cpSteps"></div>
+  </div>
+</div>
+
+<!-- ══════ 7. LIVE LOG ══════ -->
+<div class="card">
+  <div class="card-head">
+    <div class="icon-wrap">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+    </div>
+    <span class="card-label">Live Log</span>
+    <div style="margin-left:auto"><span class="log-cnt" id="logCnt">0</span></div>
+  </div>
+  <div class="prog-track"><div class="prog-fill anim" id="logProgFill" style="display:none"></div></div>
+  <div class="log-body" id="logBody">
+    <div class="log-empty">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Noch keine Logs.
+    </div>
+  </div>
+</div>
+
+<!-- ══════ 8. VERLAUF ══════ -->
+<div class="card">
+  <div class="card-head">
+    <div class="icon-wrap">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    </div>
+    <span class="card-label">Verlauf</span>
+    <div style="margin-left:auto;display:flex;gap:6px">
+      <button class="btn-sec" style="height:28px;font-size:10.5px;padding:0 10px" onclick="clearHistory()">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+        Leeren
+      </button>
+    </div>
+  </div>
+  <div id="histBody">
+    <div class="hist-empty" id="histEmpty">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Noch keine abgeschlossenen Klonvorgänge.
+    </div>
+  </div>
+</div>
+
+<!-- ══════ 9. GESPEICHERTE SERVER ══════ -->
+<div class="card">
+  <div class="card-head">
+    <div class="icon-wrap">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+    </div>
+    <span class="card-label">Gespeicherte Server</span>
+    <div style="margin-left:auto;display:flex;gap:6px;align-items:center">
+      <button class="btn-sec" style="height:28px;font-size:10.5px;padding:0 10px" onclick="exportSaved()" id="exportBtn" style="display:none">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export
+      </button>
+      <label class="btn-sec" style="height:28px;font-size:10.5px;padding:0 10px;cursor:pointer">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Import
+        <input type="file" accept=".json" onchange="importSaved(event)" style="display:none">
+      </label>
+      <button class="btn-sec" style="height:28px;font-size:10.5px;padding:0 10px" onclick="openSaveModal()">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Speichern
+      </button>
+    </div>
+  </div>
+  <div class="card-body">
+    <div class="saved-grid" id="savedGrid">
+      <div class="saved-empty" id="savedEmpty">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/></svg>
+        Noch keine Server gespeichert.
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<!-- ══════ CONFIRM MODAL ══════ -->
+<div class="overlay" id="confirmOverlay" onclick="closeOverlay('confirmOverlay',event)">
+  <div class="modal">
+    <div class="modal-hd">
+      <div class="icon-wrap"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+      <span class="modal-title">Klon bestätigen</span>
+      <button class="modal-x" onclick="document.getElementById('confirmOverlay').classList.remove('open')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="confirm-info" id="confirmInfo"></div>
+      <div class="confirm-warn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;margin-top:1px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span>Bestehende Rollen und Kanäle auf dem Ziel-Server können überschrieben werden. Dieser Vorgang kann nicht rückgängig gemacht werden.</span>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-ghost" style="height:36px;padding:0 14px;font-size:12px" onclick="document.getElementById('confirmOverlay').classList.remove('open')">Abbrechen</button>
+      <button class="btn btn-primary" style="height:36px;padding:0 16px;font-size:12px" onclick="confirmAndStart()">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Jetzt klonen
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ SAVE MODAL ══════ -->
+<div class="overlay" id="saveOverlay" onclick="closeOverlay('saveOverlay',event)">
+  <div class="modal">
+    <div class="modal-hd">
+      <div class="icon-wrap"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/></svg></div>
+      <span class="modal-title">Server speichern</span>
+      <button class="modal-x" onclick="document.getElementById('saveOverlay').classList.remove('open')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <div class="field-label"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg> Server Name</div>
+        <input type="text" id="svName" placeholder="z.B. Mein Community Server …">
+      </div>
+      <div class="field">
+        <div class="field-label"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4"/></svg> Server ID</div>
+        <input type="text" id="svId" placeholder="Server-ID oder Invite-Link …">
+      </div>
+      <div class="field">
+        <div class="field-label"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Notiz (optional)</div>
+        <input type="text" id="svNote" placeholder="Kurze Beschreibung …">
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-ghost" style="height:36px;padding:0 14px;font-size:12px" onclick="document.getElementById('saveOverlay').classList.remove('open')">Abbrechen</button>
+      <button class="btn btn-primary" style="height:36px;padding:0 16px;font-size:12px" onclick="confirmSave()">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Speichern
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ══════════════════════════════════════════════
+   STATE
+══════════════════════════════════════════════ */
+let running = false, tokenVis = false, mode = 'bot', logN = 0;
+let scannedRoles = [], scannedChs = [], deselRoles = new Set(), deselChs = new Set();
+const STORE_KEY = 'dsc_servers_v3', HIST_KEY = 'dsc_history_v3';
+
+/* ══════════════════════════════════════════════
+   RATE LIMIT SIMULATION
+══════════════════════════════════════════════ */
+let rl = 90;
+function updateRL(v) {
+  rl = Math.max(0, Math.min(100, v));
+  const fill = document.getElementById('rlFill');
+  const pill = document.getElementById('rlPill');
+  const txt  = document.getElementById('rlTxt');
+  txt.textContent = `${rl} / 100`;
+  fill.style.width = rl + '%';
+  if (rl > 60) { fill.style.background = 'var(--green)'; pill.className = 'rl-pill ok'; }
+  else if (rl > 25) { fill.style.background = 'var(--amber)'; pill.className = 'rl-pill warn'; }
+  else { fill.style.background = 'var(--red)'; pill.className = 'rl-pill low'; }
+}
+setInterval(() => { if (running) updateRL(rl - Math.random()*8); else updateRL(Math.min(100, rl + 2)); }, 1200);
+
+/* ══════════════════════════════════════════════
+   TOAST
+══════════════════════════════════════════════ */
+const ICONS = {
+  ok:   `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+  warn: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2.5" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+  err:  `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`,
+};
+function toast(msg, type = 'ok') {
+  const el = document.getElementById('toast');
+  el.innerHTML = (ICONS[type]||'') + msg;
+  el.className = `toast ${type} show`;
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.className = `toast ${type}`, 2800);
+}
+
+/* ══════════════════════════════════════════════
+   STATUS
+══════════════════════════════════════════════ */
+function setStatus(txt, cls) {
+  const c = document.getElementById('statusChip');
+  c.className = 'status-chip ' + cls;
+  document.getElementById('statusTxt').textContent = txt;
+}
+
+/* ══════════════════════════════════════════════
+   TOKEN
+══════════════════════════════════════════════ */
+function toggleToken() {
+  tokenVis = !tokenVis;
+  document.getElementById('tokenInput').type = tokenVis ? 'text' : 'password';
+  document.getElementById('eyeIco').innerHTML = tokenVis
+    ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>'
+    : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+}
+function setMode(m) {
+  mode = m;
+  document.getElementById('btnBot').classList.toggle('on', m === 'bot');
+  document.getElementById('btnUser').classList.toggle('on', m === 'user');
+}
+function onTokenChange() {
+  const s = document.getElementById('tokenStatus');
+  s.className = 'token-status idle';
+  document.getElementById('tsText').textContent = 'Token eingeben und auf „Testen" klicken';
+  document.getElementById('tsUser').style.display = 'none';
+  document.getElementById('tokenInput').classList.remove('ok-input','err-input');
+}
+function testToken() {
+  const token = document.getElementById('tokenInput').value.trim();
+  if (!token) { toast('Bitte zuerst einen Token eingeben.', 'warn'); return; }
+  const s   = document.getElementById('tokenStatus');
+  const btn = document.getElementById('testBtn');
+  s.className = 'token-status checking';
+  document.getElementById('tsText').textContent = 'Token wird überprüft …';
+  document.getElementById('tsUser').style.display = 'none';
+  btn.disabled = true; btn.textContent = '…';
+
+  setTimeout(() => {
+    btn.disabled = false; btn.textContent = 'Testen';
+    const valid = token.length > 20;
+    if (valid) {
+      s.className = 'token-status valid';
+      document.getElementById('tsText').textContent = 'Token gültig — eingeloggt als';
+      document.getElementById('tsUser').style.display = 'block';
+      document.getElementById('tsUser').textContent = mode === 'bot' ? 'ClonerBot#4821' : 'user#1234';
+      document.getElementById('tokenInput').classList.add('ok-input');
+      document.getElementById('tokenInput').classList.remove('err-input');
+      addLog('Token verifiziert ✓', 'OK');
+      toast('Token gültig.', 'ok');
+    } else {
+      s.className = 'token-status invalid';
+      document.getElementById('tsText').textContent = 'Token ungültig oder abgelaufen';
+      document.getElementById('tokenInput').classList.add('err-input');
+      document.getElementById('tokenInput').classList.remove('ok-input');
+      addLog('Token-Verifizierung fehlgeschlagen', 'ERR');
+      toast('Ungültiger Token.', 'err');
+    }
+  }, 1200);
+}
+
+/* ══════════════════════════════════════════════
+   OPTIONS
+══════════════════════════════════════════════ */
+function toggleOpt(el) { el.classList.toggle('on'); }
+
+/* ══════════════════════════════════════════════
+   MOCK DATA
+══════════════════════════════════════════════ */
+const SRC_ROLES = [
+  { name:'@everyone',     color:'#6B7A99', perms:[] },
+  { name:'Administrator', color:'#E04444', perms:['admin'] },
+  { name:'Moderator',     color:'#B89042', perms:['mod','kick','ban'] },
+  { name:'Head-Mod',      color:'#C06020', perms:['mod','kick','ban'] },
+  { name:'Support',       color:'#4A8DB5', perms:['kick'] },
+  { name:'Developer',     color:'#42A882', perms:['mod'] },
+  { name:'Partner',       color:'#9B59B6', perms:[] },
+  { name:'Booster',       color:'#E91E8C', perms:[] },
+  { name:'Verified',      color:'#5B9BD5', perms:[] },
+  { name:'Member',        color:'#7B8CA8', perms:[] },
+  { name:'Muted',         color:'#3A3F4A', perms:[] },
+];
+const TGT_ROLES = [
+  { name:'@everyone', color:'#6B7A99', perms:[] },
+  { name:'Admin',     color:'#CC3333', perms:['admin'] },
+  { name:'Mod',       color:'#AA8030', perms:['mod'] },
+  { name:'Member',    color:'#6B7A99', perms:[] },
+];
+const SRC_CHS = [
+  { cat:'INFORMATION', channels:[
+    {name:'willkommen',type:'announce'},{name:'ankündigungen',type:'announce'},
+    {name:'regeln',type:'text'},{name:'changelog',type:'forum'},
+  ]},
+  { cat:'ALLGEMEIN', channels:[
+    {name:'allgemein',type:'text'},{name:'off-topic',type:'text'},
+    {name:'medien',type:'text'},{name:'vorstellungen',type:'forum'},
+  ]},
+  { cat:'VOICE', channels:[
+    {name:'Allgemeiner Voice',type:'voice'},{name:'Music',type:'voice'},
+    {name:'AFK',type:'voice'},{name:'Stage',type:'stage'},
+  ]},
+  { cat:'SUPPORT', channels:[
+    {name:'support',type:'text'},{name:'ticket-log',type:'text'},{name:'faq',type:'text'},
+  ]},
+  { cat:'TEAM-INTERN', channels:[
+    {name:'team-chat',type:'text'},{name:'moderatoren',type:'text'},
+    {name:'protokoll',type:'text'},{name:'Team-Voice',type:'voice'},
+  ]},
+];
+const TGT_CHS = [
+  { cat:'ALLGEMEIN', channels:[
+    {name:'allgemein',type:'text'},{name:'off-topic',type:'text'},
+  ]},
+  { cat:'VOICE', channels:[
+    {name:'General Voice',type:'voice'},
+  ]},
+];
+
+const CH_ICO = {
+  text:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`,
+  voice:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>`,
+  forum:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 6H3a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h14l4 4V8a2 2 0 0 0-2-2z"/></svg>`,
+  stage:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+  announce:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 8.5V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2.5"/><polyline points="22 8 12 13 2 8"/></svg>`,
+};
+
+/* ══════════════════════════════════════════════
+   SCAN
+══════════════════════════════════════════════ */
+function switchPTab(t) {
+  ['roles','ch'].forEach(k => {
+    document.getElementById('pt'+k.charAt(0).toUpperCase()+k.slice(1)).classList.toggle('on', k===t);
+    document.getElementById('pp'+k.charAt(0).toUpperCase()+k.slice(1)).style.display = k===t ? '' : 'none';
+  });
+}
+
+function doScan() {
+  const src = document.getElementById('sourceInput').value.trim();
+  if (!src) { toast('Bitte zuerst Quell-Server eingeben.', 'warn'); return; }
+  const btn = document.getElementById('scanBtn');
+  const ico = document.getElementById('scanIco');
+  btn.disabled = true;
+  ico.style.animation = 'spin 0.7s linear infinite';
+  addLog(`Scanne Server ${src} …`, 'STEP');
+
+  setTimeout(() => {
+    ico.style.animation = '';
+    btn.disabled = false;
+    scannedRoles = SRC_ROLES;
+    scannedChs   = SRC_CHS;
+    deselRoles.clear(); deselChs.clear();
+    renderSrcRoles();
+    renderTgtRoles();
+    renderSrcChs();
+    renderTgtChs();
+    const total = SRC_CHS.reduce((a,c)=>a+c.channels.length,0);
+    document.getElementById('ptRoleN').textContent = SRC_ROLES.length;
+    document.getElementById('ptChN').textContent   = total;
+    addLog(`Scan abgeschlossen — ${SRC_ROLES.length} Rollen, ${total} Kanäle`, 'OK');
+    toast('Scan abgeschlossen.', 'ok');
+  }, 1300);
+}
+
+function renderSrcRoles() {
+  const body = document.getElementById('srcRolesBody');
+  const conflicts = SRC_ROLES.filter(r => TGT_ROLES.some(tr => tr.name.toLowerCase()===r.name.toLowerCase()));
+  body.innerHTML = '';
+  SRC_ROLES.forEach(r => {
+    const isConflict = TGT_ROLES.some(tr => tr.name.toLowerCase()===r.name.toLowerCase());
+    const isAdmin = r.perms.includes('admin'), isMod = r.perms.includes('mod');
+    const sel = !deselRoles.has(r.name);
+    const div = document.createElement('div');
+    div.className = 'role-item' + (sel ? '' : ' deselected');
+    div.onclick = () => { deselRoles.has(r.name) ? deselRoles.delete(r.name) : deselRoles.add(r.name); renderSrcRoles(); updateRoleSummary(); };
+    div.innerHTML = `
+      <div class="role-sel"><svg width="8" height="8" viewBox="0 0 10 10" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round">${sel?'<polyline points="1.5,5 4,7.5 8.5,2.5"/>':''}</svg></div>
+      <div class="role-dot" style="background:${r.color};color:${r.color}"></div>
+      <span class="role-name" style="color:${r.color==='#6B7A99'?'var(--text-2)':r.color}">${r.name}</span>
+      ${isConflict ? '<div class="conflict-dot" title="Existiert bereits auf Ziel-Server"></div>' : ''}
+      <div class="role-perms">
+        ${isAdmin?'<span class="ptag admin">ADMIN</span>':''}
+        ${isMod&&!isAdmin?'<span class="ptag mod">MOD</span>':''}
+        ${r.perms.includes('kick')?'<span class="ptag norm">KICK</span>':''}
+      </div>`;
+    body.appendChild(div);
+  });
+  document.getElementById('roleSumBar').style.display = 'flex';
+  updateRoleSummary();
+  // conflict badge
+  if (conflicts.length) {
+    const b = document.getElementById('srcRoleConflict');
+    b.style.display='';
+    b.textContent = `${conflicts.length} Konflikt${conflicts.length>1?'e':''}`;
+  }
+}
+
+function renderTgtRoles() {
+  const body = document.getElementById('tgtRolesBody');
+  body.innerHTML = '';
+  TGT_ROLES.forEach(r => {
+    const isAdmin = r.perms.includes('admin');
+    const isSrcConflict = SRC_ROLES.some(sr => sr.name.toLowerCase()===r.name.toLowerCase());
+    const div = document.createElement('div');
+    div.className = 'role-item';
+    div.style.cursor = 'default';
+    div.innerHTML = `
+      <div class="role-dot" style="background:${r.color};color:${r.color}"></div>
+      <span class="role-name" style="color:${r.color==='#6B7A99'?'var(--text-2)':r.color}">${r.name}</span>
+      ${isSrcConflict ? '<div class="conflict-dot" title="Wird überschrieben"></div>' : ''}
+      <div class="role-perms">${isAdmin?'<span class="ptag admin">ADMIN</span>':''}</div>`;
+    body.appendChild(div);
+  });
+}
+
+function updateRoleSummary() {
+  const sel = SRC_ROLES.length - deselRoles.size;
+  const admin = SRC_ROLES.filter(r=>r.perms.includes('admin')).length;
+  const conflicts = SRC_ROLES.filter(r=>TGT_ROLES.some(tr=>tr.name.toLowerCase()===r.name.toLowerCase())).length;
+  document.getElementById('sumTotalRoles').textContent = SRC_ROLES.length;
+  document.getElementById('sumSelRoles').textContent   = sel;
+  document.getElementById('sumAdminRoles').textContent = admin;
+  document.getElementById('sumConflict').textContent   = conflicts;
+}
+
+function renderSrcChs() {
+  const body = document.getElementById('srcChBody');
+  body.innerHTML = '';
+  let textN=0, voiceN=0;
+  SRC_CHS.forEach(cat => {
+    const sec = document.createElement('div'); sec.className = 'ch-cat';
+    const hd  = document.createElement('div'); hd.className = 'ch-cat-hd';
+    hd.innerHTML = `<svg class="ch-arr open" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg><span class="ch-cat-name">${cat.cat}</span><span class="ch-cat-n">${cat.channels.length}</span>`;
+    const list = document.createElement('div'); list.className = 'ch-list';
+    hd.onclick = () => { list.classList.toggle('closed'); hd.querySelector('.ch-arr').classList.toggle('open'); };
+    cat.channels.forEach(ch => {
+      const isVoice = ch.type==='voice'||ch.type==='stage';
+      isVoice ? voiceN++ : textN++;
+      const sel = !deselChs.has(cat.cat+'|'+ch.name);
+      const item = document.createElement('div');
+      item.className = 'ch-item' + (sel?'':' deselected');
+      item.onclick = e => {
+        const k = cat.cat+'|'+ch.name;
+        deselChs.has(k) ? deselChs.delete(k) : deselChs.add(k);
+        renderSrcChs(); updateChSummary();
+        e.stopPropagation();
+      };
+      const typeLbl = {forum:'Forum',voice:'Voice',stage:'Stage',announce:'Ankündig.'};
+      const badge = typeLbl[ch.type] ? `<span class="ch-tbadge ${ch.type}">${typeLbl[ch.type]}</span>` : '';
+      item.innerHTML = `
+        <div class="ch-sel"><svg width="7" height="7" viewBox="0 0 10 10" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round">${sel?'<polyline points="1.5,5 4,7.5 8.5,2.5"/>':''}</svg></div>
+        <span class="ch-ico">${CH_ICO[ch.type]||CH_ICO.text}</span>
+        <span class="ch-name">${ch.name}</span>${badge}`;
+      list.appendChild(item);
+    });
+    sec.appendChild(hd); sec.appendChild(list);
+    body.appendChild(sec);
+  });
+  document.getElementById('chSumBar').style.display = 'flex';
+  document.getElementById('sumVoice').textContent = voiceN;
+  document.getElementById('sumCats').textContent  = SRC_CHS.length;
+  updateChSummary();
+}
+
+function renderTgtChs() {
+  const body = document.getElementById('tgtChBody');
+  body.innerHTML = '';
+  TGT_CHS.forEach(cat => {
+    const sec = document.createElement('div'); sec.className = 'ch-cat';
+    const hd  = document.createElement('div'); hd.className = 'ch-cat-hd';
+    hd.innerHTML = `<svg class="ch-arr open" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg><span class="ch-cat-name">${cat.cat}</span><span class="ch-cat-n">${cat.channels.length}</span>`;
+    const list = document.createElement('div'); list.className = 'ch-list';
+    hd.onclick = () => { list.classList.toggle('closed'); hd.querySelector('.ch-arr').classList.toggle('open'); };
+    cat.channels.forEach(ch => {
+      const item = document.createElement('div');
+      item.className = 'ch-item'; item.style.cursor='default';
+      item.innerHTML = `<span class="ch-ico">${CH_ICO[ch.type]||CH_ICO.text}</span><span class="ch-name">${ch.name}</span>`;
+      list.appendChild(item);
+    });
+    sec.appendChild(hd); sec.appendChild(list);
+    body.appendChild(sec);
+  });
+}
+
+function updateChSummary() {
+  const total = SRC_CHS.reduce((a,c)=>a+c.channels.length,0);
+  const sel   = total - deselChs.size;
+  document.getElementById('sumTotalCh').textContent = total;
+  document.getElementById('sumSelCh').textContent   = sel;
+}
+
+/* ══════════════════════════════════════════════
+   LOG
+══════════════════════════════════════════════ */
+function addLog(msg, level='INFO') {
+  const body  = document.getElementById('logBody');
+  const empty = body.querySelector('.log-empty');
+  if (empty) empty.remove();
+  const t = new Date().toTimeString().slice(0,8);
+  const row = document.createElement('div');
+  row.className = 'log-row';
+  row.innerHTML = `<span class="log-time">${t}</span><span class="log-tag tag-${level}">${level}</span><span class="log-msg ${level}">${msg}</span>`;
+  body.appendChild(row); body.scrollTop = body.scrollHeight;
+  logN++;
+  document.getElementById('logCnt').textContent = logN;
+}
+function clearLog() {
+  document.getElementById('logBody').innerHTML = '<div class="log-empty"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Noch keine Logs.</div>';
+  logN=0; document.getElementById('logCnt').textContent=0;
+}
+
+/* ══════════════════════════════════════════════
+   CONFIRM MODAL
+══════════════════════════════════════════════ */
+function handleStart() {
+  const token  = document.getElementById('tokenInput').value.trim();
+  const source = document.getElementById('sourceInput').value.trim();
+  const target = document.getElementById('targetInput').value.trim();
+
+  if (!token)  { showErrCard('Kein Token','Bitte einen Token eingeben und testen.'); return; }
+  if (!source) { toast('Bitte Quell-Server eingeben.','warn'); return; }
+  if (!target) { toast('Bitte Ziel-Server eingeben.','warn'); return; }
+
+  const opts = [...document.querySelectorAll('.opt.on .opt-lbl')].map(e=>e.textContent.trim());
+  const info = document.getElementById('confirmInfo');
+  info.innerHTML = `
+    <div class="confirm-row"><span class="confirm-key">Quelle</span><span class="confirm-val">${source}</span></div>
+    <div class="confirm-row"><span class="confirm-key">Ziel</span><span class="confirm-val">${target}</span></div>
+    <div class="confirm-row"><span class="confirm-key">Modus</span><span class="confirm-val">${mode==='bot'?'Bot Token':'User Token'}</span></div>
+    <div class="confirm-row"><span class="confirm-key">Optionen</span><span class="confirm-val">${opts.join(', ')||'Keine'}</span></div>
+    <div class="confirm-row"><span class="confirm-key">Rollen</span><span class="confirm-val">${scannedRoles.length ? scannedRoles.length - deselRoles.size + ' / ' + scannedRoles.length + ' ausgewählt' : 'Nicht gescannt'}</span></div>
+    <div class="confirm-row"><span class="confirm-key">Kanäle</span><span class="confirm-val">${scannedChs.length ? scannedChs.reduce((a,c)=>a+c.channels.length,0) - deselChs.size + ' ausgewählt' : 'Nicht gescannt'}</span></div>
+  `;
+  document.getElementById('confirmOverlay').classList.add('open');
+}
+
+function confirmAndStart() {
+  document.getElementById('confirmOverlay').classList.remove('open');
+  startClone();
+}
+
+/* ══════════════════════════════════════════════
+   CLONE
+══════════════════════════════════════════════ */
+function startClone() {
+  const source = document.getElementById('sourceInput').value.trim();
+  const target = document.getElementById('targetInput').value.trim();
+  const opts   = [...document.querySelectorAll('.opt.on .opt-lbl')].map(e=>e.textContent.trim());
+  const base   = (parseFloat(document.getElementById('delayInput').value)||0.5)*1000;
+
+  running = true;
+  document.getElementById('startBtn').disabled = true;
+  document.getElementById('stopBtn').disabled  = false;
+  document.getElementById('logProgFill').style.display = '';
+  document.getElementById('cloneProgCard').style.display = '';
+  setStatus('Läuft …','run');
+
+  addLog(`Starte Klon: ${source} → ${target}`,'STEP');
+
+  // Build steps
+  const steps = [
+    {id:'connect', lbl:'Verbindung herstellen', sub:'Discord API'},
+    {id:'login',   lbl:'Einloggen',             sub:mode==='bot'?'Bot Token':'User Token'},
+    {id:'fetch-s', lbl:'Quell-Server laden',    sub:source},
+    {id:'fetch-t', lbl:'Ziel-Server laden',     sub:target},
+  ];
+  opts.forEach(o => steps.push({id:'opt-'+o, lbl:o+' übertragen', sub:'0%'}));
+  steps.push({id:'done', lbl:'Abschluss', sub:'Fertigstellen'});
+
+  renderSteps(steps);
+
+  let delay=0, stepIdx=0;
+  const totalSteps = steps.length;
+
+  function advanceStep(idx, sub, lvl='OK') {
+    const el = document.getElementById('cps-'+steps[idx].id);
+    if (!el) return;
+    el.className = 'cp-step done';
+    el.querySelector('.cp-step-ico').innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+    if (sub) el.querySelector('.cp-step-sub').textContent = sub;
+    const pct = Math.round(((idx+1)/totalSteps)*100);
+    document.getElementById('progFill').style.width = pct+'%';
+    document.getElementById('progPct').textContent  = pct+'%';
+    addLog(`${steps[idx].lbl} abgeschlossen`, lvl);
+  }
+  function activateStep(idx) {
+    const el = document.getElementById('cps-'+steps[idx].id);
+    if (!el) return;
+    el.className = 'cp-step active';
+    el.querySelector('.cp-step-ico').innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="animation:spin-step 0.8s linear infinite"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>`;
+    addLog(`${steps[idx].lbl} …`, 'INFO');
+  }
+
+  // Schedule steps
+  steps.forEach((s, i) => {
+    const act  = delay += base * 0.5;
+    const done = delay += base * 1.2;
+    setTimeout(() => { if(running) activateStep(i); }, act);
+    setTimeout(() => { if(running) {
+      const sub = i >= 4 && i < steps.length-1 ? '100%' : undefined;
+      advanceStep(i, sub);
+      updateRL(rl - 5);
+    }}, done);
+  });
+
+  // Finalize
+  setTimeout(() => {
+    if (!running) return;
+    document.getElementById('logProgFill').style.display = 'none';
+    running = false;
+    document.getElementById('startBtn').disabled = false;
+    document.getElementById('stopBtn').disabled  = true;
+    setStatus('Fertig','done');
+    addLog('Klon-Vorgang erfolgreich abgeschlossen.','OK');
+    toast('Klon abgeschlossen!','ok');
+    updateRL(rl - 10);
+    addToHistory({
+      source: document.getElementById('sourceInput').value.trim(),
+      target: document.getElementById('targetInput').value.trim(),
+      opts, status:'success',
+      roles: scannedRoles.length - deselRoles.size,
+      channels: scannedChs.reduce((a,c)=>a+c.channels.length,0) - deselChs.size,
+    });
+  }, delay + base);
+}
+
+function stopClone() {
+  running = false;
+  addLog('Vorgang abgebrochen.','WARN');
+  document.getElementById('startBtn').disabled = false;
+  document.getElementById('stopBtn').disabled  = true;
+  document.getElementById('logProgFill').style.display = 'none';
+  setStatus('Gestoppt','stop');
+  toast('Gestoppt.','warn');
+}
+
+function renderSteps(steps) {
+  const el = document.getElementById('cpSteps');
+  el.innerHTML = '';
+  document.getElementById('progFill').style.width = '0%';
+  document.getElementById('progPct').textContent = '0%';
+  steps.forEach(s => {
+    const div = document.createElement('div');
+    div.className = 'cp-step pending';
+    div.id = 'cps-'+s.id;
+    div.innerHTML = `
+      <div class="cp-step-ico"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/></svg></div>
+      <div style="flex:1"><div class="cp-step-lbl">${s.lbl}</div><div class="cp-step-sub">${s.sub||''}</div></div>`;
+    el.appendChild(div);
+  });
+}
+
+/* ══════════════════════════════════════════════
+   ERROR CARD
+══════════════════════════════════════════════ */
+function showErrCard(title, msg) {
+  toast(title+' — '+msg, 'err');
+  addLog(title+': '+msg, 'ERR');
+}
+
+/* ══════════════════════════════════════════════
+   HISTORY
+══════════════════════════════════════════════ */
+function loadHistory() {
+  try { return JSON.parse(localStorage.getItem(HIST_KEY))||[]; } catch{ return []; }
+}
+function saveHistory(h) { localStorage.setItem(HIST_KEY, JSON.stringify(h)); }
+
+function addToHistory(entry) {
+  const h = loadHistory();
+  h.unshift({ ...entry, id: Date.now().toString(36), ts: new Date().toISOString() });
+  saveHistory(h.slice(0,50));
+  renderHistory();
+}
+
+function renderHistory() {
+  const h    = loadHistory();
+  const body = document.getElementById('histBody');
+  const empt = document.getElementById('histEmpty');
+  body.innerHTML = '';
+
+  if (!h.length) {
+    body.innerHTML = `<div class="hist-empty" id="histEmpty"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Noch keine abgeschlossenen Klonvorgänge.</div>`;
+    return;
+  }
+
+  h.forEach(e => {
+    const date = new Date(e.ts);
+    const ds   = date.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'2-digit'}) + ' ' + date.toTimeString().slice(0,5);
+    const statusCls = {success:'success',partial:'partial',failed:'failed'}[e.status]||'success';
+    const tagCls    = {success:'ok',partial:'warn',failed:'fail'}[e.status]||'ok';
+    const tagLbl    = {success:'Erfolgreich',partial:'Teilweise',failed:'Fehler'}[e.status]||'OK';
+
+    const div = document.createElement('div');
+    div.className = 'hist-item';
+    div.innerHTML = `
+      <div class="hist-dot ${statusCls}"></div>
+      <div class="hist-info">
+        <div class="hist-name">${e.source} → ${e.target}</div>
+        <div class="hist-meta">
+          <span class="hist-tag ${tagCls}">${tagLbl}</span>
+          ${e.roles?`<span class="hist-tag">${e.roles} Rollen</span>`:''}
+          ${e.channels?`<span class="hist-tag">${e.channels} Kanäle</span>`:''}
+          ${(e.opts||[]).map(o=>`<span class="hist-tag">${o}</span>`).join('')}
+        </div>
+      </div>
+      <span class="hist-time">${ds}</span>`;
+    body.appendChild(div);
+  });
+}
+
+function clearHistory() {
+  localStorage.removeItem(HIST_KEY);
+  renderHistory();
+  toast('Verlauf geleert.','warn');
+}
+
+/* ══════════════════════════════════════════════
+   SAVED SERVERS
+══════════════════════════════════════════════ */
+function loadSaved() { try{ return JSON.parse(localStorage.getItem(STORE_KEY))||[]; }catch{ return []; } }
+function saveSaved(l){ localStorage.setItem(STORE_KEY, JSON.stringify(l)); }
+
+function openSaveModal() {
+  const src = document.getElementById('sourceInput').value.trim();
+  document.getElementById('svId').value   = src;
+  document.getElementById('svName').value = '';
+  document.getElementById('svNote').value = '';
+  document.getElementById('saveOverlay').classList.add('open');
+  setTimeout(()=>document.getElementById('svName').focus(),200);
+}
+function confirmSave() {
+  const name = document.getElementById('svName').value.trim();
+  const id   = document.getElementById('svId').value.trim();
+  const note = document.getElementById('svNote').value.trim();
+  if (!name) { toast('Bitte einen Namen eingeben.','warn'); return; }
+  if (!id)   { toast('Bitte eine Server-ID eingeben.','warn'); return; }
+
+  const list = loadSaved();
+  list.unshift({
+    id: Date.now().toString(36), name, serverId:id, note,
+    savedAt: new Date().toISOString(),
+    roleCount: scannedRoles.length,
+    chanCount: scannedChs.reduce((a,c)=>a+c.channels.length,0),
+  });
+  saveSaved(list);
+  document.getElementById('saveOverlay').classList.remove('open');
+  renderSaved();
+  toast(`„${name}" gespeichert.`,'ok');
+  addLog(`Server „${name}" gespeichert (ID: ${id})`,'OK');
+}
+function deleteSaved(id) {
+  saveSaved(loadSaved().filter(e=>e.id!==id));
+  renderSaved();
+  toast('Gelöscht.','warn');
+}
+function loadSavedIntoForm(entry) {
+  document.getElementById('sourceInput').value = entry.serverId;
+  toast(`„${entry.name}" geladen.`,'ok');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function renderSaved() {
+  const list = loadSaved();
+  const grid = document.getElementById('savedGrid');
+  grid.innerHTML = '';
+  if (!list.length) {
+    grid.innerHTML = '<div class="saved-empty"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/></svg>Noch keine Server gespeichert.</div>';
+    return;
+  }
+  const hues = [210,160,280,30,340,190];
+  list.forEach((e,i) => {
+    const initials = e.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    const hue      = hues[i%hues.length];
+    const date     = new Date(e.savedAt).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'2-digit'});
+    const div = document.createElement('div');
+    div.className = 'saved-item';
+    div.innerHTML = `
+      <div class="saved-av" style="background:hsl(${hue},30%,17%);color:hsl(${hue},55%,68%);border-color:hsl(${hue},30%,24%)">${initials}</div>
+      <div style="flex:1;min-width:0">
+        <div class="saved-name">${e.name}</div>
+        <div class="saved-meta">
+          <span class="saved-id">${e.serverId}</span>
+          ${e.roleCount?`<span class="sv-tag roles">${e.roleCount} Rollen</span>`:''}
+          ${e.chanCount?`<span class="sv-tag channels">${e.chanCount} Kanäle</span>`:''}
+          ${e.note?`<span class="sv-tag">${e.note}</span>`:''}
+        </div>
+      </div>
+      <span class="saved-date">${date}</span>
+      <div class="saved-actions">
+        <button class="sav-btn" onclick="loadSavedIntoForm(${JSON.stringify(e).replace(/"/g,'&quot;')})">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-5.5"/></svg>
+          Laden
+        </button>
+        <button class="sav-btn del" onclick="deleteSaved('${e.id}')" title="Löschen">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+        </button>
+      </div>`;
+    grid.appendChild(div);
+  });
+}
+function exportSaved() {
+  const list = loadSaved();
+  if (!list.length) { toast('Keine gespeicherten Server.','warn'); return; }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(list,null,2)],{type:'application/json'}));
+  a.download = `dsc-${new Date().toISOString().slice(0,10)}.json`;
+  a.click(); URL.revokeObjectURL(a.href);
+  toast(`${list.length} Server exportiert.`,'ok');
+}
+function importSaved(ev) {
+  const file = ev.target.files[0]; if(!file) return;
+  const r = new FileReader();
+  r.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!Array.isArray(data)) throw 0;
+      const ex    = new Set(loadSaved().map(x=>x.id));
+      const fresh = data.filter(x=>x.id&&x.name&&!ex.has(x.id));
+      saveSaved([...fresh,...loadSaved()]);
+      renderSaved(); toast(`${fresh.length} importiert.`,'ok');
+    } catch { toast('Ungültige Datei.','err'); }
+  };
+  r.readAsText(file); ev.target.value='';
+}
+
+/* ══════════════════════════════════════════════
+   OVERLAYS
+══════════════════════════════════════════════ */
+function closeOverlay(id, e) { if(e.target===document.getElementById(id)) document.getElementById(id).classList.remove('open'); }
+document.addEventListener('keydown', e => { if(e.key==='Escape') document.querySelectorAll('.overlay.open').forEach(o=>o.classList.remove('open')); });
+
+/* ══════════════════════════════════════════════
+   INIT
+══════════════════════════════════════════════ */
+renderHistory();
+renderSaved();
+</script>
+</body> 
+</html>
